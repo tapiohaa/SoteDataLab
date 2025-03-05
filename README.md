@@ -1,0 +1,1 @@
+*SoteDataLab* is a research project focused on the effectiveness of digital health services. We study their use, users, production, and impact using diverse, up-to-date Finnish registry data to support informed decision-making. www.sotedatalab.fi
