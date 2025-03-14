@@ -3,7 +3,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ###           r-script 4_power_analysis.R         ###
 ###                Replication file               ###        
-###                    2024 by TH                 ###
+###                    2025 by TH                 ###
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
@@ -28,7 +28,6 @@ input_stats <- here('data', 'rct_digiclinic_stats.csv')
 output_plot_age <- here('figures', 'power_late_by_age.pdf')
 output_table_late <- here('tables', 'power_late_follow_up.tex')
 output_table_itt <- here('tables', 'power_itt_follow_up.tex')
-output_table_b3 <- here('tables', 'power_b3_follow_up.tex')
 
 ###
 ###
@@ -49,7 +48,7 @@ sig.level <- 0.05 # Type 1 error rate
 share.treated <- 0.5
 follow.up <- c(9, 10, 11, 12)
 rand.unit <- c('petu', 'petu.alt')
-outcome <- c('b.1', 'b.2', 'b.3')
+outcome <- c('y1.1', 'y1.2')
 complience.coef <- c(0.94, 1, 1.06) # share of digital clinic users annually
 substitution <- c(0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40) # "MDE (ACR)"
 age.limit <- seq(10, 100, by=1) # include people younger than the age limit
@@ -200,10 +199,10 @@ plots <- lapply(rand.unit, function(rand.dim) {
 ggsave(
   filename = output_plot_age, width = 15, height = 10,
   plot = 
-    wrap_elements(panel = plots[[1]][[1]] + plots[[1]][[2]] + plots[[1]][[3]]) + 
+    wrap_elements(panel = plots[[1]][[1]] + plots[[1]][[2]]) + 
     ggtitle('A. Randomization by family') + 
     theme(plot.title = element_text(size=35, hjust=0.5)) +
-    wrap_elements(panel = plots[[2]][[1]] + plots[[2]][[2]] + plots[[2]][[3]]) + 
+    wrap_elements(panel = plots[[2]][[1]] + plots[[2]][[2]]) + 
     ggtitle('B. Randomization: alternative') + plot_layout(ncol=1) +
     theme(plot.title = element_text(size=35, hjust=0.5)))  
 
@@ -216,7 +215,7 @@ ggsave(
 
 # Randomization by family, those aged 0 to 69 are included.
 # Loop over outcomes: 
-outcomes <- c('b.1', 'b.2', 'b.3')
+outcomes <- c('y1.1', 'y1.2')
 
 tables <- lapply(outcomes, function(otc) {
   
@@ -240,8 +239,7 @@ tables <- lapply(outcomes, function(otc) {
   
 })
 
-table <- rbindlist(tables[1:2])
-table.b.3.late <- rbindlist(tables[3])
+table <- rbindlist(tables)
 
 # Save as tex:
 stargazer::stargazer(table, out = output_table_late, 
@@ -259,7 +257,7 @@ sig.level <- 0.05 # Type 1 error rate
 share.treated <- 0.5
 follow.up <- c(9, 10, 11, 12)
 rand.unit <- c('petu', 'petu.alt')
-outcome <- c('b.1', 'b.2', 'b.3')
+outcome <- c('y1.1', 'y1.2')
 effect.coef <- c(0.94, 1, 1.06) # digital clinic contacts per capita per year
 substitution <- c(0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40) # "MDE (ACR)"
 age.limit <- seq(10, 100, by=1)
@@ -357,7 +355,7 @@ invisible(lapply(1:nrow(params), function(i) {
 
 # Randomization by family, those aged 0 to 69 are included.
 # Loop over outcomes: 
-outcomes <- c('b.1', 'b.2', 'b.3')
+outcomes <- c('y1.1', 'y1.2')
 
 tables <- lapply(outcomes, function(otc) {
   
@@ -381,17 +379,11 @@ tables <- lapply(outcomes, function(otc) {
   
 })
 
-table <- rbindlist(tables[1:2])
-table.b.3.itt <- rbindlist(tables[3])
+table <- rbindlist(tables)
 
 # Save as tex:
 
 stargazer::stargazer(table, out = output_table_itt, 
-                     type='text', summary=F, header=F, rownames=F)
-
-setnames(table.b.3.itt, old='effect.coef', new='complience.coef')
-table.b.3 <- rbind(table.b.3.late, table.b.3.itt)
-stargazer::stargazer(table.b.3, out = output_table_b3, 
                      type='text', summary=F, header=F, rownames=F)
 
 # End.

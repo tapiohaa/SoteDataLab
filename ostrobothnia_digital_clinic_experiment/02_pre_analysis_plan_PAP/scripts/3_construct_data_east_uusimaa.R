@@ -3,7 +3,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ###     r-script 3_construct_data_east_uusimaa.R      ###
 ###                 Replication file.                 ###
-###                    2024 by TH                     ###
+###                    2025 by TH                     ###
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
@@ -127,7 +127,7 @@ folk[, uniqueN(petu)]
 
 dt <- CJ(shnro.new = shnro[, shnro.new],
          follow.up = f.up,
-         outcome = c('b.1', 'b.2', 'b.3'))
+         outcome = c('y1.1', 'y1.2'))
 
 dt <- merge(dt, shnro, by='shnro.new', all.x=TRUE)
 dt[, shnro := NULL]
@@ -219,7 +219,7 @@ t <- phc[, .(share_percent = round(100 * .N / nrow(phc), digits=4), .N),
 print(t)
 
 
-# Outcome A.1:
+# Outcome D.1:
 # Include care needs assessments, telemedicine and professional-to-professional 
 # interactions conducted by nurses or physicians in digital PPC clinics:
 
@@ -339,26 +339,20 @@ phc[, kaynti_alkoi_aika := NULL]
 
 # Person-date panels where included contact types differ:
 
-phc.b.1 <- phc[kaynti_yhteystapa == 'R10' & 
-                 kaynti_ammattiluokka %in% c('SH', 'LK'), 
-               .(contacts = .N), by=c('shnro', 'date')]
-phc.b.1[, outcome := 'b.1']
+phc.y1.1 <- phc[kaynti_yhteystapa == 'R10' & # in-person visits
+                  kaynti_ammattiluokka %in% c('SH', 'LK'), 
+                .(contacts = .N), by=c('shnro', 'date')]
+phc.y1.1[, outcome := 'y1.1']
 
-phc.b.2 <- 
-  phc[kaynti_yhteystapa=='hta' |
-        (kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56') & # telemed
-           kaynti_ammattiluokka=='SH'), 
+phc.y1.2 <- 
+  phc[kaynti_yhteystapa=='hta' | # care needs assesments
+        (kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56', # telemedicine
+                                  'R60', 'R71') & # prof-to-prof interactions
+           kaynti_ammattiluokka %in% c('SH','LK')), 
       .(contacts = .N), by=c('shnro', 'date')]
-phc.b.2[, outcome := 'b.2']
+phc.y1.2[, outcome := 'y1.2']
 
-phc.b.3 <- 
-  phc[(kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56', # telemedicine
-                                'R60', 'R71') & # prof-to-prof interactions) 
-         kaynti_ammattiluokka=='LK'), 
-      .(contacts = .N), by=c('shnro', 'date')]
-phc.b.3[, outcome := 'b.3']
-
-phc <- rbind(phc.b.1, phc.b.2, phc.b.3)
+phc <- rbind(phc.y1.1, phc.y1.2)
 
 
 # Create separate datasets for different follow-ups (7 months):

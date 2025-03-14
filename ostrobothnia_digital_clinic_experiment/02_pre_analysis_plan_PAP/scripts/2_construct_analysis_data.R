@@ -3,7 +3,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ###         r-script 2_construct_analysis_data.R      ###
 ###                 Replication file.                 ###
-###                    2024 by TH                     ###
+###                    2025 by TH                     ###
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
@@ -90,7 +90,7 @@ folk[, kturaha_percentile :=
 # Expand (several outcomes and follow-up lengths):
 dt <- CJ(shnro = folk[, unique(shnro)],
          follow.up = c(9, 10, 11, 12),
-         outcome = c('b.1', 'b.2', 'b.3'))
+         outcome = c('y1.1', 'y1.2'))
 dt <- merge(dt, folk, by='shnro', all.x = TRUE)
 
 
@@ -108,15 +108,15 @@ avosh <- lapply(inputs_avosh, function(input_name) {
   # Read the datasets and select covariates:
   dt <- data.table::fread(source.path, na.strings = c(NA_character_, ''))
   dt <- dt[kaynti_alkoi_pvm_c >= min_date & 
-            kaynti_alkoi_pvm_c <= max_date &
-            shnro %in% folk[, shnro] & 
-            sektori==1 &
-            kaynti_palvelumuoto=='T11' &
-            kaynti_luonne=='SH' &
-            kaynti_kavijaryhma==1 &
-            kaynti_ammattiluokka %in% c('SH', 'LK'),
-          .(avohilmoid, shnro, kaynti_yhteystapa, kaynti_alkoi_pvm_c, 
-            kaynti_ammattiluokka, kaynti_alkoi_aika)]
+             kaynti_alkoi_pvm_c <= max_date &
+             shnro %in% folk[, shnro] & 
+             sektori==1 &
+             kaynti_palvelumuoto=='T11' &
+             kaynti_luonne=='SH' &
+             kaynti_kavijaryhma==1 &
+             kaynti_ammattiluokka %in% c('SH', 'LK'),
+           .(avohilmoid, shnro, kaynti_yhteystapa, kaynti_alkoi_pvm_c, 
+             kaynti_ammattiluokka, kaynti_alkoi_aika)]
   
 })
 avosh <- rbindlist(avosh)
@@ -131,12 +131,12 @@ hta <- lapply(inputs_hta, function(input_name) {
   # Read the datasets and select covariates:
   dt <- data.table::fread(source.path, na.strings = c(NA_character_, ''))
   dt <- dt[hta_pvm_c >= min_date & 
-            hta_pvm_c <= max_date &
-            shnro %in% folk[, shnro] & 
-            sektori==1,
-          .(avohilmoid, shnro, hta_pvm_c, hta_aika, hta_ammattiluokka)]
+             hta_pvm_c <= max_date &
+             shnro %in% folk[, shnro] & 
+             sektori==1,
+           .(avohilmoid, shnro, hta_pvm_c, hta_aika, hta_ammattiluokka)]
   dt[, kaynti_yhteystapa :='hta']
- 
+  
 })
 hta <- rbindlist(hta)
 
@@ -149,7 +149,7 @@ hta <- merge(hta, avosh[, .(avohilmoid, kaynti_alkoi_aika, kaynti_alkoi_pvm_c)],
              by='avohilmoid', all.x = TRUE)
 
 hta <- hta[is.na(kaynti_alkoi_pvm_c) |
-            !(kaynti_alkoi_aika == hta_aika & kaynti_alkoi_pvm_c == hta_pvm_c)]
+             !(kaynti_alkoi_aika == hta_aika & kaynti_alkoi_pvm_c == hta_pvm_c)]
 
 # Tidy columns:
 hta[, ':=' (kaynti_alkoi_aika=NULL, kaynti_alkoi_pvm_c=NULL, hta_aika=NULL)]
@@ -193,26 +193,20 @@ phc[, kaynti_alkoi_aika := NULL]
 
 # Person-date panels where included contact types differ:
 
-phc.b.1 <- phc[kaynti_yhteystapa == 'R10' & 
-                   kaynti_ammattiluokka %in% c('SH', 'LK'), 
-                 .(contacts = .N), by=c('shnro', 'date')]
-phc.b.1[, outcome := 'b.1']
+phc.y1.1 <- phc[kaynti_yhteystapa == 'R10' & # in-person visits
+                  kaynti_ammattiluokka %in% c('SH', 'LK'), 
+                .(contacts = .N), by=c('shnro', 'date')]
+phc.y1.1[, outcome := 'y1.1']
 
-phc.b.2 <- 
-  phc[kaynti_yhteystapa=='hta' |
-        (kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56') & # telemed
-           kaynti_ammattiluokka=='SH'), 
+phc.y1.2 <- 
+  phc[kaynti_yhteystapa=='hta' | # care needs assesments
+        (kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56', # telemedicine
+                                  'R60', 'R71') & # prof-to-prof interactions
+           kaynti_ammattiluokka %in% c('SH','LK')), 
       .(contacts = .N), by=c('shnro', 'date')]
-phc.b.2[, outcome := 'b.2']
+phc.y1.2[, outcome := 'y1.2']
 
-phc.b.3 <- 
-  phc[(kaynti_yhteystapa %in% c('R50','R51','R52','R55','R56', # telemedicine
-                                'R60', 'R71') & # prof-to-prof interactions) 
-         kaynti_ammattiluokka=='LK'), 
-      .(contacts = .N), by=c('shnro', 'date')]
-phc.b.3[, outcome := 'b.3']
-
-phc <- rbind(phc.b.1, phc.b.2, phc.b.3)
+phc <- rbind(phc.y1.1, phc.y1.2)
 
 
 # Create separate datasets for different follow-ups (9, 10, 11, 12 months):
@@ -239,12 +233,12 @@ phc.9kk[, follow.up := 9]
 
 phc.10kk <- phc.10kk[, .(contact.days = .N), by=c('shnro', 'post', 'outcome')]
 phc.10kk <- dcast(phc.10kk, shnro + outcome ~ paste0('contact.days.post', post), 
-                 value.var = 'contact.days')
+                  value.var = 'contact.days')
 phc.10kk[, follow.up := 10]
 
 phc.11kk <- phc.11kk[, .(contact.days = .N), by=c('shnro', 'post', 'outcome')]
 phc.11kk <- dcast(phc.11kk, shnro + outcome ~ paste0('contact.days.post', post), 
-                 value.var = 'contact.days')
+                  value.var = 'contact.days')
 phc.11kk[, follow.up := 11]
 
 phc.12kk <- phc.12kk[, .(contact.days = .N), by=c('shnro', 'post', 'outcome')]
@@ -286,7 +280,7 @@ test[, min(N)]
 # Next, stratify by the number of leading PPC contacts.
 
 # Initialize strata that may be "too granular" (N_s < 2):
-strata.2 <- dt[follow.up==9 & outcome=='b.1']
+strata.2 <- dt[follow.up==9 & outcome=='y1.1']
 strata.2[, strata := contact.days.post0]
 
 # Compute stratum sizes and sort by baseline visits (largest to smallest):
@@ -350,7 +344,7 @@ aggr.strata.to.next <- function(data, data.help) {
 strata.2 <- aggr.strata.to.next(data = strata.2, data.help = dt.help)
 
 # The smallest stratum size:
-test <- strata.2[follow.up==9 & outcome=='b.1', .N, by=c('strata')]
+test <- strata.2[follow.up==9 & outcome=='y1.1', .N, by=c('strata')]
 test[, min(N)]
 
 # Merge stratum information to dt:
@@ -404,8 +398,8 @@ dt[strata_dim=='stratum.3', strata_dim := 'complete']
 # We use the negative binomial distribution with mu=0.23 and size=0.0225.
 100 * (1 - dnbinom(0, mu=0.23, size=0.0225)) # 5.29 % had at least one contact
 set.seed(123)
-draw <- rnbinom(nrow(dt[follow.up==9 & outcome=='b.1' & strata_dim=='complete']), 
-               mu=0.23, size=0.0225)
+draw <- rnbinom(nrow(dt[follow.up==9 & outcome=='y1.1' & strata_dim=='complete']), 
+                mu=0.23, size=0.0225)
 100 - 100 * sum(draw==0) / length(draw) # 5.24 % had at least one contact
 mean(draw) # 0.23 contacts per resident
 mean(draw[draw > 0]) # 4.38 contacts per client

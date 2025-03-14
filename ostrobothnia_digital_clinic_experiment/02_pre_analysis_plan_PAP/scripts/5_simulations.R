@@ -3,7 +3,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ###             r-script 5_simulations.R          ###
 ###                Replication file               ###        
-###                    2024 by TH                 ###
+###                    2025 by TH                 ###
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
@@ -83,7 +83,7 @@ randomize.ind <- function(data) {
   
 }
 test <- randomize.ind(df[follow.up==9 & strata_dim=='complete' & 
-                           outcome=='b.1'])
+                           outcome=='y1.1'])
 
 
 ### A function that randomizes families to treatment. ###
@@ -120,7 +120,7 @@ randomize.fam <- function(data, var) {
   
 }
 test <- randomize.fam(df[follow.up==9 & strata_dim=='complete' & 
-                           outcome=='b.1'], var='petu.alt')
+                           outcome=='y1.1'], var='petu.alt')
 
 
 ### A function that estimates the effect, its variance, and T-statistic using 
@@ -252,7 +252,7 @@ monte.carlo <- function(data, follow_up, outcome.model='Y_i(0)=Y_i(1)', otc,
                         petu.var='NA') {
   # INPUTS:
   # outcome.model: 'Y_i(0)=Y_i(1)' (ATE=0 & no heterogeneity)
-  # otc: 'b.1', 'b.2', 'b.3'
+  # otc: 'y1.1', 'y1.2'
   # follow_up: either 6, 9 or 12 months
   # strata_dimension:
   #   'age_gender' for stratified randomization by age*gender
@@ -353,7 +353,7 @@ results <- lapply(follow.ups, function(fup) {
     
     mc <- monte.carlo(
       data = df, 
-      otc = 'b.1',
+      otc = 'y1.1',
       follow_up = fup,
       strata_dimension = specification$strata_dimension, 
       method.est = specification$method.est,
@@ -379,7 +379,7 @@ Sys.time() - t
 
 age.limit <- 70
 
-outcomes <- c('b.1', 'b.2', 'b.3')
+outcomes <- c('y1.1', 'y1.2')
 follow.up <- 7
 randomization.type <- 'family'
 cluster.types <- 'petu'

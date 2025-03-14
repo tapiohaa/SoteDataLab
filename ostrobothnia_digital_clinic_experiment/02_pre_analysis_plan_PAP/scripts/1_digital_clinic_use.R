@@ -3,7 +3,7 @@
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ###           r-script 1_digital_clinic_use.R         ###
 ###                 Replication file.                 ###
-###                    2024 by TH                     ###
+###                    2025 by TH                     ###
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 ### ### ### ### ### ### ### ### ### ### ### ### ### ### #
 
@@ -153,7 +153,7 @@ t <- phc[, .(share_percent = round(100 * .N / nrow(phc), digits=4), .N),
 print(t)
 
 
-# Outcome A.1:
+# Outcome D.1:
 # Include care needs assessments, telemedicine and professional-to-professional 
 # interactions conducted by nurses or physicians in digital PPC clinics:
 
@@ -182,7 +182,7 @@ folk[, used.digi := as.integer(digi.contacts > 0)]
 ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 
-# Compute standard deviation of the D (digital clinic use) and estimate ar2 as 
+# Compute standard deviation of the D.1 (digital clinic use) and estimate ar2 as 
 # a function of age limit:
 
 age.limit <- 10 : 100
@@ -194,7 +194,8 @@ r2dw <- lapply(age.limit, function(i) {
   
   # ar2:
   
-  ols.formula <- used.digi ~ 1 | ika + sukup + kunta31_12 + kturaha_percentile + kieli_k
+  ols.formula <- used.digi ~ 1 | ika + sukup + kunta31_12 + kturaha_percentile + 
+    kieli_k
   # NOTE: Y_pre is not here although it should.
   
   ols <- fixest::feols(ols.formula, data = df) 
